@@ -1,0 +1,73 @@
+# https://taskfile.dev
+version: '3'
+includes:
+  dev: ./Taskfile_dev.yml
+
+vars:
+  BINFILE: cartographer-mcp
+
+tasks:
+  default:
+    desc: "List tasks"
+    preconditions:
+      - test -f .git/hooks/pre-commit
+    cmds:
+      - task -a
+
+  check-before-commit:
+    desc: "Run checks before committing"
+    preconditions:
+      - test -f .git/hooks/pre-commit
+    deps:
+      - test
+      - snapshot
+    cmds:
+      - task: lint
+
+  lint:
+    desc: "Run golangci-lint"
+    cmds:
+      - golangci-lint run
+
+  test:
+    desc: "Run unit tests with race detection"
+    cmds:
+      - go test -count=2 -race ./...
+
+  coverage:
+    desc: "Generate coverage report with percentage"
+    cmds:
+      - go test ./internal/... -coverpkg=./internal/... -coverprofile=profile.cov
+      - echo -n "Total Coverage{{":"}} "
+      - go tool cover -func profile.cov | grep '^total{{":"}}' | awk '{print $3}'
+      - rm -f profile.cov
+
+  build:
+    desc: "Build the binary"
+    cmds:
+      - go mod download
+      - CGO_ENABLED=0 go build -o {{.BINFILE}} .
+
+  image:
+    desc: "Build and push Docker image"
+    deps:
+      - build
+    cmds:
+      - docker build --no-cache --build-arg VERSION=development . -t ghcr.io/sgaunet/{{.BINFILE}}:latest
+      - docker push ghcr.io/sgaunet/{{.BINFILE}}:latest
+
+  doc:
+    desc: "Start godoc documentation server"
+    cmds:
+      - echo http://localhost:6060
+      - godoc -http=:6060
+
+  snapshot:
+    desc: "Create snapshot release with goreleaser"
+    cmds:
+      - GITLAB_TOKEN="" goreleaser --clean --snapshot
+
+  release:
+    desc: "Create production release with goreleaser"
+    cmds:
+      - GITLAB_TOKEN="" goreleaser --clean
