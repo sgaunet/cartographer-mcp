@@ -21,6 +21,7 @@ builds:
     ignore:
       - goos: darwin
         goarch: "386"
+    dir: cmd/cartographer
 
 archives:
   - id: binary
