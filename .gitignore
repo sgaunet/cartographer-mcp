@@ -1,0 +1,8 @@
+/cartographer-mcp
+/.task
+/dist
+*vault*
+/.specify
+/specs
+/CLAUDE.md
+/.claude
