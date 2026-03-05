@@ -2,6 +2,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"log/slog"
@@ -17,6 +18,7 @@ var version = "dev"
 
 func main() {
 	showVersion := flag.Bool("version", false, "Print version and exit")
+	refresh := flag.Bool("refresh", false, "Force a full cache refresh on startup before serving")
 	flag.Parse()
 
 	if *showVersion {
@@ -49,6 +51,24 @@ func main() {
 	}
 
 	refresher := cache.NewRefresher(store, c)
+
+	if *refresh {
+		if len(cfg.Groups) == 0 {
+			fmt.Fprintln(os.Stderr, "--refresh requires CARTOGRAPHER_GROUPS to be configured")
+			os.Exit(1)
+		}
+		slog.Info("refreshing cache on startup", "groups", cfg.Groups)
+		result, err := refresher.Refresh(context.Background(), cfg.GitLabURI, cfg.Groups)
+		if err != nil {
+			slog.Error("startup refresh failed", "error", err)
+			os.Exit(1)
+		}
+		slog.Info("startup refresh complete",
+			"projects_discovered", result.ProjectsDiscovered,
+			"projects_with_cartographer", result.ProjectsWithCartographer,
+			"duration_ms", result.DurationMs,
+			"diagnostics", len(result.Diagnostics))
+	}
 
 	srv := mcpserver.NewServer(cfg, store, refresher)
 	if err := srv.ServeStdio(); err != nil {
