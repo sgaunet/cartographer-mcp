@@ -1,0 +1,33 @@
+---
+version: "2"
+# Configure which files to skip during linting
+run:
+  tests: false
+
+linters:
+  default: all
+
+  disable:
+    - wsl
+    - wsl_v5
+    - nlreturn
+    - depguard
+    - gochecknoinits
+    - gochecknoglobals
+    - forbidigo
+    - varnamelen
+    - exhaustruct
+    - tagliatelle
+    - noinlineerr
+    - revive
+    - ireturn
+    - misspell
+    - interfacebloat  # Gateway interfaces are a valid pattern for DI
+    - nilerr  # MCP handlers return (ToolResult with error text, nil) by design
+    - mnd  # File permission constants like 0o750 are self-documenting
+
+  settings:
+    gosec:
+      excludes:
+        - G304  # Config file path is user-controlled by design
+        - G706  # slog logging from file paths is safe in local CLI tool
