@@ -3,7 +3,7 @@ module github.com/sgaunet/cartographer-mcp
 go 1.25.5
 
 require (
-	github.com/mark3labs/mcp-go v0.55.1
+	github.com/mark3labs/mcp-go v0.57.0
 	gitlab.com/gitlab-org/api/client-go v1.46.0
 	gopkg.in/yaml.v3 v3.0.1
 )
